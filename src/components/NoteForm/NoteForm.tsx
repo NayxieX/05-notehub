@@ -4,8 +4,8 @@ import css from "./NoteForm.module.css";
 import type { NoteTag } from "../../types/note";
 
 interface NoteFormProps {
-  onSubmit: (values: { title: string; content: string; tag: NoteTag }) => void;
   onCancel: () => void;
+  onSubmit: (values: { title: string; content: string; tag: NoteTag }) => void;
 }
 
 const validationSchema = Yup.object({
@@ -16,12 +16,15 @@ const validationSchema = Yup.object({
     .required("Tag is required"),
 });
 
-const NoteForm = ({ onSubmit, onCancel }: NoteFormProps) => {
+const NoteForm = ({ onCancel, onSubmit }: NoteFormProps) => {
   return (
     <Formik
       initialValues={{ title: "", content: "", tag: "Todo" }}
       validationSchema={validationSchema}
-      onSubmit={onSubmit}
+      onSubmit={(values, { resetForm }) => {
+        onSubmit({ ...values, tag: values.tag as NoteTag });
+        resetForm();
+      }}
     >
       {({ isSubmitting, isValid }) => (
         <Form className={css.form}>
@@ -40,11 +43,7 @@ const NoteForm = ({ onSubmit, onCancel }: NoteFormProps) => {
               rows={8}
               className={css.textarea}
             />
-            <FormikError
-              name="content"
-              component="span"
-              className={css.error}
-            />
+            <FormikError name="content" component="span" className={css.error} />
           </div>
 
           <div className={css.formGroup}>
@@ -64,6 +63,7 @@ const NoteForm = ({ onSubmit, onCancel }: NoteFormProps) => {
               type="button"
               className={css.cancelButton}
               onClick={onCancel}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
@@ -72,7 +72,7 @@ const NoteForm = ({ onSubmit, onCancel }: NoteFormProps) => {
               className={css.submitButton}
               disabled={!isValid || isSubmitting}
             >
-              Create note
+              {isSubmitting ? "Creating..." : "Create note"}
             </button>
           </div>
         </Form>

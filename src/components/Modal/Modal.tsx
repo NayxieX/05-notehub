@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import ReactDOM from "react-dom";
 import css from "./Modal.module.css";
 
 interface ModalProps {
@@ -20,13 +21,20 @@ const Modal = ({ children, onClose }: ModalProps) => {
     };
   }, [onClose]);
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className={css.backdrop}
       role="dialog"
@@ -34,7 +42,8 @@ const Modal = ({ children, onClose }: ModalProps) => {
       onClick={handleBackdropClick}
     >
       <div className={css.modal}>{children}</div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

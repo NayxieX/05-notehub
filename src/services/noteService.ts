@@ -12,32 +12,29 @@ const instance = axios.create({
 });
 
 export interface FetchNotesResponse {
-  items: Note[];
-  totalItems: number;
+  notes: Note[];
   totalPages: number;
-  page: number;
-  perPage: number;
 }
 
 export const fetchNotes = async (
   page: number,
-  perPage: number,
-  search?: string
+  search: string = ""
 ): Promise<FetchNotesResponse> => {
-  const params: Record<string, string | number> = { page, perPage };
-  if (search) params.search = search;
+  const params: Record<string, string | number> = {
+    page,
+  };
+  if (search.trim() !== "") {
+    params.search = search;
+  }
 
-  const { data } = await instance.get<{ notes: Note[]; totalPages: number }>(
-    "",
-    { params }
-  );
+  const { data } = await instance.get<{
+    notes: Note[];
+    totalPages: number;
+  }>("/", { params });
 
   return {
-    items: data.notes,
-    totalItems: data.notes.length, // якщо API не повертає totalItems — підраховуємо вручну
+    notes: data.notes,
     totalPages: data.totalPages,
-    page,
-    perPage,
   };
 };
 
@@ -48,11 +45,11 @@ export interface CreateNoteDto {
 }
 
 export const createNote = async (note: CreateNoteDto): Promise<Note> => {
-  const { data } = await instance.post<Note>("", note);
+  const { data } = await instance.post<Note>("/", note);
   return data;
 };
 
-export const deleteNote = async (id: string): Promise<Note> => {
+export const deleteNote = async (id: number): Promise<Note> => {
   const { data } = await instance.delete<Note>(`/${id}`);
   return data;
 };
