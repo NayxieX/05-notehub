@@ -2,10 +2,10 @@ import { Formik, Form, Field, ErrorMessage as FormikError } from "formik";
 import * as Yup from "yup";
 import css from "./NoteForm.module.css";
 import type { NoteTag } from "../../types/note";
+import { useCreateNote } from "../../hooks/useCreateNote";
 
 interface NoteFormProps {
   onCancel: () => void;
-  onSubmit: (values: { title: string; content: string; tag: NoteTag }) => void;
 }
 
 const validationSchema = Yup.object({
@@ -16,17 +16,19 @@ const validationSchema = Yup.object({
     .required("Tag is required"),
 });
 
-const NoteForm = ({ onCancel, onSubmit }: NoteFormProps) => {
+const NoteForm = ({ onCancel }: NoteFormProps) => {
+  const { mutate, isPending, error } = useCreateNote(onCancel);
+
   return (
     <Formik
       initialValues={{ title: "", content: "", tag: "Todo" }}
       validationSchema={validationSchema}
       onSubmit={(values, { resetForm }) => {
-        onSubmit({ ...values, tag: values.tag as NoteTag });
-        resetForm();
+        mutate({ ...values, tag: values.tag as NoteTag });
+        resetForm(); 
       }}
     >
-      {({ isSubmitting, isValid }) => (
+      {({ isValid }) => (
         <Form className={css.form}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
@@ -43,7 +45,11 @@ const NoteForm = ({ onCancel, onSubmit }: NoteFormProps) => {
               rows={8}
               className={css.textarea}
             />
-            <FormikError name="content" component="span" className={css.error} />
+            <FormikError
+              name="content"
+              component="span"
+              className={css.error}
+            />
           </div>
 
           <div className={css.formGroup}>
@@ -58,21 +64,27 @@ const NoteForm = ({ onCancel, onSubmit }: NoteFormProps) => {
             <FormikError name="tag" component="span" className={css.error} />
           </div>
 
+          {error && (
+            <div className={css.error}>
+              {(error as Error).message || "Failed to create note"}
+            </div>
+          )}
+
           <div className={css.actions}>
             <button
               type="button"
               className={css.cancelButton}
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
               className={css.submitButton}
-              disabled={!isValid || isSubmitting}
+              disabled={!isValid || isPending}
             >
-              {isSubmitting ? "Creating..." : "Create note"}
+              {isPending ? "Creating..." : "Create note"}
             </button>
           </div>
         </Form>

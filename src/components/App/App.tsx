@@ -10,11 +10,9 @@ import NoteList from "../NoteList/NoteList";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
 
-import type { NoteTag } from "../../types/note";
-import { fetchNotes, createNote } from "../../services/noteService";
+import { fetchNotes } from "../../services/noteService";
 import useDebounce from "../../hooks/useDebounce";
 import type { FetchNotesResponse } from "../../services/noteService";
-import { useMutation } from "@tanstack/react-query";
 
 function App() {
   const [page, setPage] = useState(1);
@@ -41,23 +39,6 @@ function App() {
     },
   });
 
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setIsModalOpen(false);
-      setPage(1);
-    },
-  });
-
-  const handleSubmit = (values: {
-    title: string;
-    content: string;
-    tag: NoteTag;
-  }) => {
-    createMutation.mutate(values);
-  };
-
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
@@ -79,10 +60,7 @@ function App() {
       {isModalOpen &&
         createPortal(
           <Modal onClose={() => setIsModalOpen(false)}>
-            <NoteForm
-              onCancel={() => setIsModalOpen(false)}
-              onSubmit={handleSubmit}
-            />
+            <NoteForm onCancel={() => setIsModalOpen(false)} />
           </Modal>,
           document.body
         )}
